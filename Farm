@@ -31,6 +31,38 @@ local function queueAutoLoad()
 end
 Players.LocalPlayer.OnTeleport:Connect(queueAutoLoad)
 
+local function makeDraggable(clickObject, moveObject)
+    local dragging, dragInput, dragStart, startPos
+    clickObject.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = moveObject.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    clickObject.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            moveObject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
+local function addStroke(obj)
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(255, 0, 0)
+    stroke.Thickness = 1.5
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Parent = obj
+    return stroke
+end
+
 local overlay = Instance.new("Frame")
 overlay.Name = "BlackOverlay"
 overlay.Size = UDim2.new(1, 0, 1, 0)
@@ -60,17 +92,70 @@ unlockButton.Parent = overlay
 
 local menuFrame = Instance.new("Frame")
 menuFrame.Name = "MenuFrame"
-menuFrame.Size = UDim2.new(0, 250, 0, 310)
-menuFrame.Position = UDim2.new(0.5, -125, 0.5, -155)
+menuFrame.Size = UDim2.new(0, 300, 0, 310)
+menuFrame.Position = UDim2.new(0.5, -150, 0.5, -155)
 menuFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 menuFrame.BorderSizePixel = 0
 menuFrame.Active = true
 menuFrame.Visible = true
 menuFrame.Parent = screenGui
 
-local uiCorner = Instance.new("UICorner")
-uiCorner.CornerRadius = UDim.new(0, 10)
-uiCorner.Parent = menuFrame
+local menuCorner = Instance.new("UICorner")
+menuCorner.CornerRadius = UDim.new(0, 15)
+menuCorner.Parent = menuFrame
+addStroke(menuFrame)
+
+local confirmGroup = Instance.new("Frame")
+confirmGroup.Name = "ConfirmGroup"
+confirmGroup.Size = UDim2.new(1, 0, 1, 0)
+confirmGroup.BackgroundTransparency = 1
+confirmGroup.Visible = false
+confirmGroup.Parent = menuFrame
+
+local confirmText = Instance.new("TextLabel")
+confirmText.Text = "Deseja Realmente Sair?"
+confirmText.Size = UDim2.new(1, 0, 0.4, 0)
+confirmText.Position = UDim2.new(0, 0, 0.1, 0)
+confirmText.BackgroundTransparency = 1
+confirmText.TextColor3 = Color3.new(1, 1, 1)
+confirmText.Font = Enum.Font.GothamBold
+confirmText.TextSize = 18
+confirmText.TextTransparency = 1
+confirmText.Parent = confirmGroup
+
+local btnSim = Instance.new("TextButton")
+btnSim.Text = "Sim"
+btnSim.Size = UDim2.new(0.4, 0, 0, 40)
+btnSim.Position = UDim2.new(0.07, 0, 0.6, 0)
+btnSim.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+btnSim.TextColor3 = Color3.new(1, 1, 1)
+btnSim.Font = Enum.Font.GothamBold
+btnSim.TextSize = 16
+btnSim.BackgroundTransparency = 1
+btnSim.TextTransparency = 1
+btnSim.Parent = confirmGroup
+Instance.new("UICorner", btnSim).CornerRadius = UDim.new(0, 8)
+addStroke(btnSim)
+
+local btnNao = Instance.new("TextButton")
+btnNao.Text = "Não"
+btnNao.Size = UDim2.new(0.4, 0, 0, 40)
+btnNao.Position = UDim2.new(0.53, 0, 0.6, 0)
+btnNao.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+btnNao.TextColor3 = Color3.fromRGB(50, 200, 50)
+btnNao.Font = Enum.Font.GothamBold
+btnNao.TextSize = 16
+btnNao.BackgroundTransparency = 1
+btnNao.TextTransparency = 1
+btnNao.Parent = confirmGroup
+Instance.new("UICorner", btnNao).CornerRadius = UDim.new(0, 8)
+addStroke(btnNao)
+
+local contentGroup = Instance.new("Frame")
+contentGroup.Name = "ContentGroup"
+contentGroup.Size = UDim2.new(1, 0, 1, 0)
+contentGroup.BackgroundTransparency = 1
+contentGroup.Parent = menuFrame
 
 local dragHandle = Instance.new("TextButton")
 dragHandle.Name = "DragHandle"
@@ -80,33 +165,12 @@ dragHandle.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 dragHandle.Text = "✥"
 dragHandle.TextColor3 = Color3.new(1, 1, 1)
 dragHandle.TextSize = 20
-dragHandle.Parent = menuFrame
+dragHandle.Parent = contentGroup
 local dragCorner = Instance.new("UICorner")
 dragCorner.CornerRadius = UDim.new(0, 10)
 dragCorner.Parent = dragHandle
+addStroke(dragHandle)
 
-local function makeDraggable(clickObject, moveObject)
-    local dragging, dragInput, dragStart, startPos
-    clickObject.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = moveObject.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
-            end)
-        end
-    end)
-    clickObject.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            moveObject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-end
 makeDraggable(dragHandle, menuFrame)
 
 local title = Instance.new("TextLabel")
@@ -116,8 +180,8 @@ title.Position = UDim2.new(0, 40, 0, 0)
 title.BackgroundTransparency = 1
 title.TextColor3 = Color3.new(1, 1, 1)
 title.Font = Enum.Font.GothamBold
-title.TextSize = 16
-title.Parent = menuFrame
+title.TextSize = 18
+title.Parent = contentGroup
 
 local footer = Instance.new("TextLabel")
 footer.Text = "made by Seven"
@@ -127,7 +191,7 @@ footer.BackgroundTransparency = 1
 footer.TextColor3 = Color3.fromRGB(0, 170, 255)
 footer.Font = Enum.Font.Gotham
 footer.TextSize = 12
-footer.Parent = menuFrame
+footer.Parent = contentGroup
 
 local closeBtn = Instance.new("TextButton")
 closeBtn.Text = "X"
@@ -135,8 +199,9 @@ closeBtn.Size = UDim2.new(0, 30, 0, 30)
 closeBtn.Position = UDim2.new(1, -35, 0, 5)
 closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
 closeBtn.TextColor3 = Color3.new(1, 1, 1)
-closeBtn.Parent = menuFrame
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+closeBtn.Parent = contentGroup
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 8)
+addStroke(closeBtn)
 
 local minBtn = Instance.new("TextButton")
 minBtn.Text = "_"
@@ -144,8 +209,9 @@ minBtn.Size = UDim2.new(0, 30, 0, 30)
 minBtn.Position = UDim2.new(1, -70, 0, 5)
 minBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 minBtn.TextColor3 = Color3.new(1, 1, 1)
-minBtn.Parent = menuFrame
-Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 6)
+minBtn.Parent = contentGroup
+Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 8)
+addStroke(minBtn)
 
 local activateBtn = Instance.new("TextButton")
 activateBtn.Text = "ATIVAR MODO ESCURO"
@@ -155,10 +221,45 @@ activateBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 activateBtn.TextColor3 = Color3.new(1, 1, 1)
 activateBtn.Font = Enum.Font.GothamBold
 activateBtn.TextSize = 14
-activateBtn.Parent = menuFrame
-Instance.new("UICorner", activateBtn)
+activateBtn.Parent = contentGroup
+Instance.new("UICorner", activateBtn).CornerRadius = UDim.new(0, 8)
+addStroke(activateBtn)
 
-local function createSocialBtn(text, color, pos, callback)
+local notifFrame = Instance.new("Frame")
+notifFrame.Name = "Notification"
+notifFrame.Size = UDim2.new(0, 320, 0, 50)
+notifFrame.Position = UDim2.new(0.5, -160, 0.8, 0)
+notifFrame.BackgroundColor3 = Color3.new(0, 0, 0)
+notifFrame.BorderSizePixel = 0
+notifFrame.Visible = false
+notifFrame.ZIndex = 200
+notifFrame.Parent = screenGui
+Instance.new("UICorner", notifFrame).CornerRadius = UDim.new(0, 8)
+addStroke(notifFrame)
+
+local notifText = Instance.new("TextLabel")
+notifText.Size = UDim2.new(1, 0, 1, 0)
+notifText.BackgroundTransparency = 1
+notifText.Text = "LINK COPIADO, BASTA COLAR NO NAVEGADOR"
+notifText.TextColor3 = Color3.new(1, 1, 1)
+notifText.Font = Enum.Font.GothamBold
+notifText.TextSize = 12
+notifText.TextWrapped = true
+notifText.ZIndex = 201
+notifText.Parent = notifFrame
+
+local function showToast()
+    notifFrame.BackgroundTransparency = 0
+    notifText.TextTransparency = 0
+    notifFrame.Visible = true
+    task.wait(1.5)
+    local t1 = TweenService:Create(notifFrame, TweenInfo.new(1), {BackgroundTransparency = 1})
+    local t2 = TweenService:Create(notifText, TweenInfo.new(1), {TextTransparency = 1})
+    t1:Play(); t2:Play()
+    t1.Completed:Connect(function() notifFrame.Visible = false end)
+end
+
+local function createSocialBtn(text, color, pos, url)
     local btn = Instance.new("TextButton")
     btn.Text = text
     btn.Size = UDim2.new(0.9, 0, 0, 35)
@@ -167,21 +268,22 @@ local function createSocialBtn(text, color, pos, callback)
     btn.TextColor3 = Color3.new(1, 1, 1)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 14
-    btn.Parent = menuFrame
-    Instance.new("UICorner", btn)
-    if color == Color3.fromRGB(0,0,0) then
-        local stroke = Instance.new("UIStroke")
-        stroke.Color = Color3.fromRGB(255,255,255)
-        stroke.Thickness = 1
-        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-        stroke.Parent = btn
-    end
-    btn.MouseButton1Click:Connect(callback)
+    btn.Parent = contentGroup
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    addStroke(btn)
+    btn.MouseButton1Click:Connect(function()
+        setclipboard(url)
+        showToast()
+    end)
 end
+
+createSocialBtn("TikTok", Color3.fromRGB(0, 0, 0), UDim2.new(0.05, 0, 0.38, 0), LinkTikTok)
+createSocialBtn("Youtube", Color3.fromRGB(255, 0, 0), UDim2.new(0.05, 0, 0.53, 0), LinkYoutube)
+createSocialBtn("Instagram", Color3.fromRGB(193, 53, 132), UDim2.new(0.05, 0, 0.68, 0), LinkInstagram)
 
 local minIcon = Instance.new("TextButton")
 minIcon.Name = "MinimizedIcon"
-minIcon.Size = UDim2.new(0, 50, 0, 50)
+minIcon.Size = UDim2.new(0, 0, 0, 0)
 minIcon.Position = UDim2.new(0.9, -60, 0.1, 0)
 minIcon.BackgroundColor3 = Color3.new(0, 0, 0)
 minIcon.Text = "S"
@@ -189,17 +291,133 @@ minIcon.TextColor3 = Color3.fromRGB(255, 0, 0)
 minIcon.TextSize = 30
 minIcon.Font = Enum.Font.GothamBold
 minIcon.Visible = false
+minIcon.TextTransparency = 1
 minIcon.Parent = screenGui
 Instance.new("UICorner", minIcon).CornerRadius = UDim.new(1, 0)
-Instance.new("UIStroke", minIcon).Color = Color3.fromRGB(50, 50, 50)
+addStroke(minIcon)
+makeDraggable(minIcon, minIcon)
 
+local savedPos = menuFrame.Position
+local savedSize = menuFrame.Size
+local isAnimating = false
 local taps = 0
 local isLocked = false
 
-local function openSocial(url)
-    setclipboard(url)
-    pcall(function() GuiService:OpenBrowserWindow(url) end)
+local function fadeGroup(group, transparency, time)
+    for _, child in pairs(group:GetChildren()) do
+        if child:IsA("GuiObject") then
+            TweenService:Create(child, TweenInfo.new(time), {BackgroundTransparency = child:IsA("TextButton") and (transparency == 0 and (child.Name == "Sim" and 0 or (child.Name == "Não" and 0 or 1)) or 1) or 1}):Play()
+            if child:IsA("TextLabel") or child:IsA("TextButton") then
+                TweenService:Create(child, TweenInfo.new(time), {TextTransparency = transparency}):Play()
+            end
+            if child:FindFirstChild("UIStroke") then
+                 TweenService:Create(child.UIStroke, TweenInfo.new(time), {Transparency = transparency}):Play()
+            end
+        end
+    end
 end
+
+closeBtn.MouseButton1Click:Connect(function()
+    if isAnimating then return end
+    isAnimating = true
+    savedPos = menuFrame.Position
+    
+    fadeGroup(contentGroup, 1, 0.3)
+    task.wait(0.3)
+    contentGroup.Visible = false
+    
+    local centerPos = UDim2.new(0.5, -125, 0.5, -75)
+    local confirmSize = UDim2.new(0, 250, 0, 150)
+    
+    local tPos = TweenService:Create(menuFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = centerPos, Size = confirmSize})
+    tPos:Play()
+    tPos.Completed:Wait()
+    
+    confirmGroup.Visible = true
+    TweenService:Create(confirmText, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+    TweenService:Create(btnSim, TweenInfo.new(0.5), {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+    TweenService:Create(btnNao, TweenInfo.new(0.5), {BackgroundTransparency = 0, TextTransparency = 0}):Play()
+    TweenService:Create(btnSim.UIStroke, TweenInfo.new(0.5), {Transparency = 0}):Play()
+    TweenService:Create(btnNao.UIStroke, TweenInfo.new(0.5), {Transparency = 0}):Play()
+    
+    isAnimating = false
+end)
+
+btnNao.MouseButton1Click:Connect(function()
+    if isAnimating then return end
+    isAnimating = true
+    
+    fadeGroup(confirmGroup, 1, 0.3)
+    task.wait(0.3)
+    confirmGroup.Visible = false
+    
+    local tBack = TweenService:Create(menuFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = savedPos, Size = savedSize})
+    tBack:Play()
+    tBack.Completed:Wait()
+    
+    contentGroup.Visible = true
+    fadeGroup(contentGroup, 0, 0.3)
+    title.BackgroundTransparency = 1
+    footer.BackgroundTransparency = 1
+    
+    isAnimating = false
+end)
+
+btnSim.MouseButton1Click:Connect(function()
+    local tShrink = TweenService:Create(menuFrame, TweenInfo.new(1, Enum.EasingStyle.Exponential), {Size = UDim2.new(0,0,0,0)})
+    tShrink:Play()
+    fadeGroup(confirmGroup, 1, 0.5)
+    tShrink.Completed:Wait()
+    screenGui:Destroy()
+end)
+
+minBtn.MouseButton1Click:Connect(function()
+    if isAnimating then return end
+    isAnimating = true
+    savedPos = menuFrame.Position
+    
+    TweenService:Create(menuFrame, TweenInfo.new(0.1), {Size = UDim2.new(0, 310, 0, 320)}):Play()
+    task.wait(0.1)
+    
+    fadeGroup(contentGroup, 1, 0.2)
+    local tShrink = TweenService:Create(menuFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
+    tShrink:Play()
+    tShrink.Completed:Wait()
+    menuFrame.Visible = false
+    
+    minIcon.Visible = true
+    minIcon.Position = UDim2.new(savedPos.X.Scale, savedPos.X.Offset + 125, savedPos.Y.Scale, savedPos.Y.Offset + 100)
+    local tGrow = TweenService:Create(minIcon, TweenInfo.new(0.4, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {Size = UDim2.new(0,50,0,50)})
+    tGrow:Play()
+    TweenService:Create(minIcon, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+    isAnimating = false
+end)
+
+minIcon.MouseButton1Click:Connect(function()
+    if isAnimating then return end
+    isAnimating = true
+    
+    local currentIconPos = minIcon.Position
+    
+    local tShrink = TweenService:Create(minIcon, TweenInfo.new(0.2), {Size = UDim2.new(0,0,0,0)})
+    tShrink:Play()
+    tShrink.Completed:Wait()
+    minIcon.Visible = false
+    
+    menuFrame.Visible = true
+    menuFrame.Position = UDim2.new(currentIconPos.X.Scale, currentIconPos.X.Offset - 150, currentIconPos.Y.Scale, currentIconPos.Y.Offset - 155)
+    menuFrame.Size = UDim2.new(0,0,0,0)
+    
+    local tGrow = TweenService:Create(menuFrame, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {Size = UDim2.new(0, 300, 0, 310)})
+    tGrow:Play()
+    
+    contentGroup.Visible = true
+    fadeGroup(contentGroup, 0, 0.5)
+    title.BackgroundTransparency = 1
+    footer.BackgroundTransparency = 1
+    
+    isAnimating = false
+end)
 
 local function activateAmoled()
     menuFrame.Visible = false
@@ -215,16 +433,13 @@ local function activateAmoled()
     end
     countdownLabel.Text = ""
     countdownLabel.Visible = false
-    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear)
-    local tween = TweenService:Create(overlay, tweenInfo, {BackgroundTransparency = 0})
-    tween:Play()
+    TweenService:Create(overlay, TweenInfo.new(1), {BackgroundTransparency = 0}):Play()
 end
 
 local function deactivateAmoled()
-    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear)
-    local tween = TweenService:Create(overlay, tweenInfo, {BackgroundTransparency = 1})
-    tween:Play()
-    tween.Completed:Connect(function()
+    local t = TweenService:Create(overlay, TweenInfo.new(1), {BackgroundTransparency = 1})
+    t:Play()
+    t.Completed:Connect(function()
         overlay.Visible = false
         isLocked = false
         taps = 0
@@ -233,36 +448,11 @@ local function deactivateAmoled()
 end
 
 activateBtn.MouseButton1Click:Connect(activateAmoled)
-
 unlockButton.MouseButton1Click:Connect(function()
     if isLocked then
         taps = taps + 1
         if taps >= 2 then deactivateAmoled() end
     end
 end)
-
-createSocialBtn("TikTok", Color3.fromRGB(0, 0, 0), UDim2.new(0.05, 0, 0.38, 0), function()
-    openSocial(LinkTikTok)
-end)
-
-createSocialBtn("Ir Para Youtube", Color3.fromRGB(255, 0, 0), UDim2.new(0.05, 0, 0.53, 0), function()
-    openSocial(LinkYoutube)
-end)
-
-createSocialBtn("Ir Para O Instagram", Color3.fromRGB(193, 53, 132), UDim2.new(0.05, 0, 0.68, 0), function()
-    openSocial(LinkInstagram)
-end)
-
-minBtn.MouseButton1Click:Connect(function()
-    menuFrame.Visible = false
-    minIcon.Visible = true
-end)
-
-minIcon.MouseButton1Click:Connect(function()
-    minIcon.Visible = false
-    menuFrame.Visible = true
-end)
-
-closeBtn.MouseButton1Click:Connect(function() screenGui:Destroy() end)
 
 task.spawn(activateAmoled)
