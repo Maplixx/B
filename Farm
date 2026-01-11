@@ -1,3 +1,4 @@
+local ScriptVersion = "1.0"
 local LinkTikTok = "https://www.tiktok.com/@.rnyzx"
 local LinkYoutube = "https://youtube.com/@s3venzzx"
 local LinkInstagram = "https://www.instagram.com/yz.seven"
@@ -10,8 +11,12 @@ local GuiService = game:GetService("GuiService")
 
 local guiName = "AmoledScreenSaverPro"
 
-if CoreGui:FindFirstChild(guiName) then CoreGui[guiName]:Destroy() end
-if Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild(guiName) then Players.LocalPlayer.PlayerGui[guiName]:Destroy() end
+if CoreGui:FindFirstChild(guiName) then
+    CoreGui[guiName]:Destroy()
+end
+if Players.LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild(guiName) then
+    Players.LocalPlayer.PlayerGui[guiName]:Destroy()
+end
 
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = guiName
@@ -188,10 +193,20 @@ footer.Text = "made by Seven"
 footer.Size = UDim2.new(1, 0, 0, 20)
 footer.Position = UDim2.new(0, 0, 1, -25)
 footer.BackgroundTransparency = 1
-footer.TextColor3 = Color3.fromRGB(0, 170, 255)
+footer.TextColor3 = Color3.fromRGB(0, 255, 255)
 footer.Font = Enum.Font.Gotham
 footer.TextSize = 12
 footer.Parent = contentGroup
+
+local versionLabel = Instance.new("TextLabel")
+versionLabel.Text = "Versão: " .. ScriptVersion
+versionLabel.Size = UDim2.new(1, 0, 0, 20)
+versionLabel.Position = UDim2.new(0, 0, 0.82, 0)
+versionLabel.BackgroundTransparency = 1
+versionLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+versionLabel.Font = Enum.Font.GothamBold
+versionLabel.TextSize = 12
+versionLabel.Parent = contentGroup
 
 local closeBtn = Instance.new("TextButton")
 closeBtn.Text = "X"
@@ -214,7 +229,7 @@ Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 8)
 addStroke(minBtn)
 
 local activateBtn = Instance.new("TextButton")
-activateBtn.Text = "ATIVAR MODO ESCURO"
+activateBtn.Text = "(Ativar)"
 activateBtn.Size = UDim2.new(0.9, 0, 0, 40)
 activateBtn.Position = UDim2.new(0.05, 0, 0.18, 0)
 activateBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -397,15 +412,18 @@ minIcon.MouseButton1Click:Connect(function()
     if isAnimating then return end
     isAnimating = true
     
-    local currentIconPos = minIcon.Position
-    
+    local safePos = UDim2.new(0.5, -25, 0.5, -25)
+    local tMove = TweenService:Create(minIcon, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = safePos})
+    tMove:Play()
+    tMove.Completed:Wait()
+
     local tShrink = TweenService:Create(minIcon, TweenInfo.new(0.2), {Size = UDim2.new(0,0,0,0)})
     tShrink:Play()
     tShrink.Completed:Wait()
     minIcon.Visible = false
     
     menuFrame.Visible = true
-    menuFrame.Position = UDim2.new(currentIconPos.X.Scale, currentIconPos.X.Offset - 150, currentIconPos.Y.Scale, currentIconPos.Y.Offset - 155)
+    menuFrame.Position = UDim2.new(0.5, -150, 0.5, -155)
     menuFrame.Size = UDim2.new(0,0,0,0)
     
     local tGrow = TweenService:Create(menuFrame, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {Size = UDim2.new(0, 300, 0, 310)})
@@ -454,5 +472,3 @@ unlockButton.MouseButton1Click:Connect(function()
         if taps >= 2 then deactivateAmoled() end
     end
 end)
-
-task.spawn(activateAmoled)
