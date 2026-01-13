@@ -1,6 +1,9 @@
-local ScriptVersion = "1.3"
-local UrlKeyGithub = "https://raw.githubusercontent.com/Maplixx/B/refs/heads/main/key.txt"
+local ScriptVersion = "1.4"
+--[[ CONFIGURAÇÕES ]]
+local UrlKeyGithub = "https://raw.githubusercontent.com/Maplixx/B/refs/heads/main/key.txt" -- Key Atual
+local UrlOldKeysGithub = "https://raw.githubusercontent.com/Maplixx/B/refs/heads/main/oldkeys.txt" -- Lista de Keys Antigas
 local LinkKeyEncurtador = "https://fir3.net/KeyAmoledHub"
+
 local LinkTikTok = "https://www.tiktok.com/@.rnyzx"
 local LinkYoutube = "https://youtube.com/@s3venzzx"
 local LinkInstagram = "https://www.instagram.com/yz.seven"
@@ -108,11 +111,12 @@ local function styleButton(btn, color)
     stroke.Transparency = 0.3
     stroke.Parent = btn
 
-    btn.MouseButton1Down:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(btn.Size.X.Scale * 0.95, 0, btn.Size.Y.Scale * 0.95, 0)}):Play()
-    end)
-    btn.MouseButton1Up:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(btn.Size.X.Scale / 0.95, 0, btn.Size.Y.Scale / 0.95, 0)}):Play()
+    btn.MouseButton1Click:Connect(function()
+        local t1 = TweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(btn.Size.X.Scale * 0.95, 0, btn.Size.Y.Scale * 0.95, 0)})
+        t1:Play()
+        t1.Completed:Wait()
+        local t2 = TweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(btn.Size.X.Scale / 0.95, 0, btn.Size.Y.Scale / 0.95, 0)})
+        t2:Play()
     end)
 end
 
@@ -166,7 +170,7 @@ overlay.BackgroundColor3 = Color3.new(0, 0, 0)
 overlay.BackgroundTransparency = 1 
 overlay.Visible = false
 overlay.ZIndex = 100
-overlay.Active = true
+overlay.Active = false 
 overlay.Parent = screenGui
 
 local countdownLabel = Instance.new("TextLabel")
@@ -425,6 +429,7 @@ keyInput.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 keyInput.BackgroundTransparency = 0.5
 keyInput.TextColor3 = Color3.new(1, 1, 1)
 keyInput.PlaceholderText = "Insira sua Key..."
+keyInput.Text = ""
 keyInput.Font = Enum.Font.Gotham
 keyInput.TextSize = 14
 keyInput.Parent = keyContent
@@ -478,21 +483,32 @@ local function animateLoading()
     progressBarBg.Visible = false
 end
 
-local function checkKey(keyStr)
-    local success, onlineKey = pcall(function()
+local function checkKeyStatus(keyStr)
+    if not keyStr or keyStr:gsub(" ", "") == "" then
+        return "empty"
+    end
+
+    local successCurrent, onlineKey = pcall(function()
         return game:HttpGet(UrlKeyGithub):gsub("^%s*(.-)%s*$", "%1")
     end)
     
-    if success and keyStr == onlineKey then
-        if writefile then
-            writefile(fileName, keyStr)
-        end
-        return true, false 
-    elseif success and keyStr ~= onlineKey then
-        return false, true 
-    else
-        return false, false 
+    if successCurrent and keyStr == onlineKey then
+        return "valid"
     end
+    
+    local successOld, oldKeysRaw = pcall(function()
+        return game:HttpGet(UrlOldKeysGithub)
+    end)
+    
+    if successOld then
+        for oldKey in oldKeysRaw:gmatch("[^\r\n]+") do
+            if oldKey:gsub("^%s*(.-)%s*$", "%1") == keyStr then
+                return "expired"
+            end
+        end
+    end
+
+    return "invalid"
 end
 
 copyLinkBtn.MouseButton1Click:Connect(function()
@@ -503,20 +519,24 @@ end)
 checkBtn.MouseButton1Click:Connect(function()
     animateLoading()
     local userKey = keyInput.Text:gsub("^%s*(.-)%s*$", "%1")
-    local isValid, isChanged = checkKey(userKey)
+    local status = checkKeyStatus(userKey)
     
-    if isValid then
+    if status == "valid" then
+        if writefile then writefile(fileName, userKey) end
         showToast("ACESSO PERMITIDO")
         task.wait(0.5)
         keyFrame.Visible = false
         mainFrame.Visible = true
         currentMenu = mainFrame
-    elseif isChanged then
+    elseif status == "empty" then
+        showToast("CAMPO VAZIO")
+        warningLabel.Text = "POR FAVOR, DIGITE UMA KEY."
+    elseif status == "expired" then
         showToast("KEY EXPIRADA")
-        warningLabel.Text = "A KEY MUDOU! PEGUE A NOVA."
+        warningLabel.Text = "ESSA KEY EXPIROU! PEGUE A NOVA."
     else
         showToast("KEY INVÁLIDA")
-        warningLabel.Text = "TENTE NOVAMENTE."
+        warningLabel.Text = "VERIFIQUE SE DIGITOU CORRETAMENTE."
     end
 end)
 
@@ -657,6 +677,7 @@ local function activateAmoled()
     mainFrame.Visible = false
     minIcon.Visible = false
     overlay.Visible = true
+    overlay.Active = true
     overlay.BackgroundTransparency = 1
     taps = 0
     isLocked = false
@@ -684,6 +705,7 @@ local function deactivateAmoled()
     t:Play()
     t.Completed:Connect(function()
         overlay.Visible = false
+        overlay.Active = false
         taps = 0
         mainFrame.Visible = true
         setBlur(true)
@@ -702,14 +724,14 @@ task.spawn(function()
     if readfile and isfile and isfile(fileName) then
         local savedKey = readfile(fileName)
         animateLoading() 
-        local isValid, isChanged = checkKey(savedKey)
-        if isValid then
+        local status = checkKeyStatus(savedKey)
+        if status == "valid" then
             showToast("BEM-VINDO DE VOLTA")
             keyFrame.Visible = false
             mainFrame.Visible = true
             currentMenu = mainFrame
-        elseif isChanged then
-             warningLabel.Text = "KEY EXPIRADA. PEGUE A NOVA."
+        elseif status == "expired" then
+             warningLabel.Text = "KEY SALVA EXPIROU. PEGUE A NOVA."
              if delfile then delfile(fileName) end
         end
     end
