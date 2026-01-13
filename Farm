@@ -1,18 +1,23 @@
-local ScriptVersion = "1.4"
---[[ CONFIGURAÇÕES ]]
-local UrlKeyGithub = "https://raw.githubusercontent.com/Maplixx/B/refs/heads/main/key.txt" -- Key Atual
-local UrlOldKeysGithub = "https://raw.githubusercontent.com/Maplixx/B/refs/heads/main/oldkeys.txt" -- Lista de Keys Antigas
+local ScriptVersion = "1.5"
+local UrlKeyGithub = "https://raw.githubusercontent.com/Maplixx/B/refs/heads/main/key.txt"
+local UrlOldKeysGithub = "https://raw.githubusercontent.com/Maplixx/B/refs/heads/main/oldkeys.txt"
 local LinkKeyEncurtador = "https://fir3.net/KeyAmoledHub"
-
 local LinkTikTok = "https://www.tiktok.com/@.rnyzx"
 local LinkYoutube = "https://youtube.com/@s3venzzx"
 local LinkInstagram = "https://www.instagram.com/yz.seven"
+
+local MsgKeyVazia = "POR FAVOR, DIGITE UMA KEY"
+local MsgKeyValida = "ACESSO PERMITIDO"
+local MsgKeyExpirada = "KEY EXPIRADA! PEGUE A NOVA"
+local MsgKeyInvalida = "KEY INVÁLIDA"
+local MsgLinkCopiado = "LINK COPIADO!"
+local MsgErroConexao = "ERRO DE CONEXÃO"
+local MsgBemVindo = "BEM-VINDO DE VOLTA"
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local Lighting = game:GetService("Lighting")
 local UserSettings = UserSettings()
 
 local guiName = "AmoledScreenSaverPro"
@@ -28,14 +33,6 @@ screenGui.DisplayOrder = 10000
 screenGui.ResetOnSpawn = false
 pcall(function() screenGui.Parent = CoreGui end)
 if not screenGui.Parent then screenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui") end
-
-local menuBlur = Instance.new("BlurEffect")
-menuBlur.Size = 0
-menuBlur.Parent = Lighting
-
-local function setBlur(enabled)
-    TweenService:Create(menuBlur, TweenInfo.new(0.5), {Size = enabled and 20 or 0}):Play()
-end
 
 local function queueAutoLoad()
     if syn and syn.queue_on_teleport then
@@ -112,10 +109,10 @@ local function styleButton(btn, color)
     stroke.Parent = btn
 
     btn.MouseButton1Click:Connect(function()
-        local t1 = TweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(btn.Size.X.Scale * 0.95, 0, btn.Size.Y.Scale * 0.95, 0)})
+        local t1 = TweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(btn.Size.X.Scale * 0.9, 0, btn.Size.Y.Scale * 0.9, 0)})
         t1:Play()
         t1.Completed:Wait()
-        local t2 = TweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(btn.Size.X.Scale / 0.95, 0, btn.Size.Y.Scale / 0.95, 0)})
+        local t2 = TweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(btn.Size.X.Scale / 0.9, 0, btn.Size.Y.Scale / 0.9, 0)})
         t2:Play()
     end)
 end
@@ -170,7 +167,7 @@ overlay.BackgroundColor3 = Color3.new(0, 0, 0)
 overlay.BackgroundTransparency = 1 
 overlay.Visible = false
 overlay.ZIndex = 100
-overlay.Active = false 
+overlay.Active = false
 overlay.Parent = screenGui
 
 local countdownLabel = Instance.new("TextLabel")
@@ -245,7 +242,6 @@ Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 20)
 createGradientStroke(mainFrame)
 
 local currentMenu = keyFrame 
-setBlur(true)
 
 local function setupCommonElements(frame, titleText)
     local confirmGroup = Instance.new("Frame")
@@ -382,7 +378,6 @@ local function setupCommonElements(frame, titleText)
         local tShrink = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Size = UDim2.new(0,0,0,0)})
         tShrink:Play()
         fadeGroup(confirmGroup, 1, 0.3)
-        setBlur(false)
         tShrink.Completed:Wait()
         screenGui:Destroy()
     end)
@@ -395,7 +390,6 @@ local function setupCommonElements(frame, titleText)
         fadeGroup(contentGroup, 1, 0.2)
         local tShrink = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0,0,0,0)})
         tShrink:Play()
-        setBlur(false)
         tShrink.Completed:Wait()
         frame.Visible = false
         minIcon.Visible = true
@@ -513,30 +507,36 @@ end
 
 copyLinkBtn.MouseButton1Click:Connect(function()
     setclipboard(LinkKeyEncurtador)
-    showToast("LINK COPIADO!")
+    showToast(MsgLinkCopiado)
 end)
 
 checkBtn.MouseButton1Click:Connect(function()
-    animateLoading()
     local userKey = keyInput.Text:gsub("^%s*(.-)%s*$", "%1")
+    
+    if userKey == "" then
+        showToast(MsgKeyVazia)
+        warningLabel.Text = MsgKeyVazia
+        return
+    end
+
+    animateLoading()
     local status = checkKeyStatus(userKey)
     
     if status == "valid" then
         if writefile then writefile(fileName, userKey) end
-        showToast("ACESSO PERMITIDO")
+        showToast(MsgKeyValida)
         task.wait(0.5)
         keyFrame.Visible = false
         mainFrame.Visible = true
         currentMenu = mainFrame
-    elseif status == "empty" then
-        showToast("CAMPO VAZIO")
-        warningLabel.Text = "POR FAVOR, DIGITE UMA KEY."
     elseif status == "expired" then
-        showToast("KEY EXPIRADA")
-        warningLabel.Text = "ESSA KEY EXPIROU! PEGUE A NOVA."
-    else
-        showToast("KEY INVÁLIDA")
-        warningLabel.Text = "VERIFIQUE SE DIGITOU CORRETAMENTE."
+        showToast(MsgKeyExpirada)
+        warningLabel.Text = MsgKeyExpirada
+    elseif status == "invalid" then
+        showToast(MsgKeyInvalida)
+        warningLabel.Text = MsgKeyInvalida
+    elseif status == "empty" then
+        showToast(MsgKeyVazia)
     end
 end)
 
@@ -614,7 +614,7 @@ local function createSocialBtn(text, color, pos, url)
     btn.Parent = mainContent
     btn.MouseButton1Click:Connect(function()
         setclipboard(url)
-        showToast("LINK COPIADO")
+        showToast(MsgLinkCopiado)
     end)
 end
 
@@ -647,7 +647,6 @@ minIcon.MouseButton1Click:Connect(function()
     
     local tMove = TweenService:Create(currentMenu, TweenInfo.new(0.6, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = endPos, Size = targetSize})
     tMove:Play()
-    setBlur(true)
     
     if currentMenu:FindFirstChild("ContentGroup") then
         local cg = currentMenu.ContentGroup
@@ -681,7 +680,6 @@ local function activateAmoled()
     overlay.BackgroundTransparency = 1
     taps = 0
     isLocked = false
-    setBlur(false)
     countdownLabel.Visible = true
     for i = 3, 1, -1 do
         countdownLabel.Text = tostring(i)
@@ -708,7 +706,6 @@ local function deactivateAmoled()
         overlay.Active = false
         taps = 0
         mainFrame.Visible = true
-        setBlur(true)
     end)
 end
 
@@ -726,12 +723,12 @@ task.spawn(function()
         animateLoading() 
         local status = checkKeyStatus(savedKey)
         if status == "valid" then
-            showToast("BEM-VINDO DE VOLTA")
+            showToast(MsgBemVindo)
             keyFrame.Visible = false
             mainFrame.Visible = true
             currentMenu = mainFrame
         elseif status == "expired" then
-             warningLabel.Text = "KEY SALVA EXPIROU. PEGUE A NOVA."
+             warningLabel.Text = MsgKeyExpirada
              if delfile then delfile(fileName) end
         end
     end
