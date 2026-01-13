@@ -4,7 +4,7 @@ local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 
-local uiName = "SV_AntiKill_V2"
+local uiName = "SV_AntiKill_V2_FixedZoom"
 local existing = CoreGui:FindFirstChild(uiName)
 if existing then
     existing:Destroy()
@@ -183,11 +183,15 @@ Viewport.CurrentCamera = Instance.new("Camera")
 local CubePart = Instance.new("Part")
 CubePart.Material = Enum.Material.Neon
 CubePart.Color = THEME_COLOR
-CubePart.Size = Vector3.new(8, 8, 8) 
+-- Tamanho inicial
+local initialSize = 8
+CubePart.Size = Vector3.new(initialSize, initialSize, initialSize)
 CubePart.Parent = Viewport
 
 local Camera = Viewport.CurrentCamera
-Camera.CFrame = CFrame.new(Vector3.new(0, 0, 12), Vector3.new(0, 0, 0))
+-- Distância inicial da câmera baseada no tamanho
+local initialDist = initialSize * 1.8 
+Camera.CFrame = CFrame.new(Vector3.new(0, 0, initialDist), Vector3.new(0, 0, 0))
 Camera.Parent = Viewport
 
 local InfoText = Instance.new("TextLabel")
@@ -217,8 +221,14 @@ local function updateSlider(input)
     
     SliderFill.Size = UDim2.new(pct, 0, 1, 0)
     
+    -- Calcula o novo tamanho do cubo (de 2 a 20)
     local newSize = 2 + (pct * 18)
     CubePart.Size = Vector3.new(newSize, newSize, newSize)
+    
+    -- Calcula a nova distância da câmera para manter o enquadramento
+    -- A distância é proporcional ao tamanho do cubo
+    local newDist = newSize * 1.8
+    Camera.CFrame = CFrame.new(Vector3.new(0, 0, newDist), Vector3.new(0, 0, 0))
 end
 
 SliderBtn.InputBegan:Connect(function(input)
