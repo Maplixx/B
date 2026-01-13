@@ -1,4 +1,4 @@
-local ScriptVersion = "1.6"
+local ScriptVersion = "1.7"
 local UrlKeyGithub = "https://raw.githubusercontent.com/Maplixx/B/refs/heads/main/key.txt"
 local UrlOldKeysGithub = "https://raw.githubusercontent.com/Maplixx/B/refs/heads/main/oldkeys.txt"
 local LinkKeyEncurtador = "https://fir3.net/KeyAmoledHub"
@@ -42,6 +42,29 @@ local function queueAutoLoad()
 end
 Players.LocalPlayer.OnTeleport:Connect(queueAutoLoad)
 
+local function makeDraggable(clickObject, moveObject)
+    local dragging, dragInput, dragStart, startPos
+    clickObject.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = moveObject.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    clickObject.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then dragInput = input end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            moveObject.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
 local function createGradientStroke(parent)
     local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromRGB(255, 255, 255)
@@ -83,17 +106,19 @@ local function styleButton(btn, color)
     stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     stroke.Transparency = 0.3
     stroke.Parent = btn
+end
 
-    btn.MouseButton1Down:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(btn.Size.X.Scale * 0.95, 0, btn.Size.Y.Scale * 0.95, 0)}):Play()
-    end)
+local function animateClick(btn)
+    if not btn then return end
+    local originalSize = btn.Size
+    local shrinkSize = UDim2.new(originalSize.X.Scale * 0.95, originalSize.X.Offset, originalSize.Y.Scale * 0.95, originalSize.Y.Offset)
     
-    local function restore()
-        TweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(btn.Size.X.Scale / 0.95, 0, btn.Size.Y.Scale / 0.95, 0)}):Play()
-    end
+    local t1 = TweenService:Create(btn, TweenInfo.new(0.05), {Size = shrinkSize})
+    t1:Play()
+    t1.Completed:Wait()
     
-    btn.MouseButton1Up:Connect(restore)
-    btn.MouseLeave:Connect(restore)
+    local t2 = TweenService:Create(btn, TweenInfo.new(0.05), {Size = originalSize})
+    t2:Play()
 end
 
 local notifFrame = Instance.new("Frame")
@@ -310,6 +335,7 @@ local function setupCommonElements(frame, titleText)
     closeBtn.MouseButton1Click:Connect(function()
         if isAnimating then return end
         isAnimating = true
+        animateClick(closeBtn)
         fadeGroup(contentGroup, 1, 0.3)
         task.wait(0.3)
         contentGroup.Visible = false
@@ -326,6 +352,7 @@ local function setupCommonElements(frame, titleText)
     btnNao.MouseButton1Click:Connect(function()
         if isAnimating then return end
         isAnimating = true
+        animateClick(btnNao)
         fadeGroup(confirmGroup, 1, 0.3)
         task.wait(0.3)
         confirmGroup.Visible = false
@@ -340,6 +367,7 @@ local function setupCommonElements(frame, titleText)
     end)
 
     btnSim.MouseButton1Click:Connect(function()
+        animateClick(btnSim)
         local tShrink = TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Back), {Size = UDim2.new(0,0,0,0)})
         tShrink:Play()
         fadeGroup(confirmGroup, 1, 0.3)
@@ -350,6 +378,7 @@ local function setupCommonElements(frame, titleText)
     minBtn.MouseButton1Click:Connect(function()
         if isAnimating then return end
         isAnimating = true
+        animateClick(minBtn)
         currentMenu = frame
         
         local downPos = UDim2.new(0.5, -160, 1.2, 0)
@@ -473,11 +502,13 @@ local function checkKeyStatus(keyStr)
 end
 
 copyLinkBtn.MouseButton1Click:Connect(function()
+    animateClick(copyLinkBtn)
     setclipboard(LinkKeyEncurtador)
     showToast(MsgLinkCopiado)
 end)
 
 checkBtn.MouseButton1Click:Connect(function()
+    animateClick(checkBtn)
     local userKey = keyInput.Text:gsub("^%s*(.-)%s*$", "%1")
     
     if userKey == "" then
@@ -544,6 +575,7 @@ styleButton(muteBtn, Color3.fromRGB(255, 150, 0))
 muteBtn.Parent = mainContent
 
 muteBtn.MouseButton1Click:Connect(function()
+    animateClick(muteBtn)
     if not isMuted then
         savedVolume = UserSettings.GameSettings.MasterVolume
         UserSettings.GameSettings.MasterVolume = 0
@@ -568,6 +600,7 @@ styleButton(fpsBtn, Color3.fromRGB(100, 50, 255))
 fpsBtn.Parent = mainContent
 
 fpsBtn.MouseButton1Click:Connect(function()
+    animateClick(fpsBtn)
     loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Optiz-FpsBooster-60070"))()
     showToast("FPS BOOST ATIVO")
 end)
@@ -580,6 +613,7 @@ local function createSocialBtn(text, color, pos, url)
     styleButton(btn, color)
     btn.Parent = mainContent
     btn.MouseButton1Click:Connect(function()
+        animateClick(btn)
         setclipboard(url)
         showToast(MsgLinkCopiado)
     end)
@@ -595,6 +629,7 @@ local isLocked = false
 showMenuBtn.MouseButton1Click:Connect(function()
     if isAnimating then return end
     isAnimating = true
+    animateClick(showMenuBtn)
     
     local tShrink = TweenService:Create(showMenuBtn, TweenInfo.new(0.3), {Size = UDim2.new(0,0,0,0)})
     tShrink:Play()
@@ -650,7 +685,11 @@ local function deactivateAmoled()
     end)
 end
 
-activateBtn.MouseButton1Click:Connect(activateAmoled)
+activateBtn.MouseButton1Click:Connect(function()
+    animateClick(activateBtn)
+    activateAmoled()
+end)
+
 unlockButton.MouseButton1Click:Connect(function()
     if isLocked then
         taps = taps + 1
