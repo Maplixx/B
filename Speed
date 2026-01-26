@@ -22,12 +22,12 @@ local isMobile = UserInputService.TouchEnabled and not UserInputService.Keyboard
 local pcMode = not isMobile
 
 local Colors = {
-    Main = Color3.fromRGB(15, 15, 15),
+    Main = Color3.fromRGB(18, 18, 18),
     Stroke = Color3.fromRGB(255, 30, 30),
     Text = Color3.fromRGB(255, 255, 255),
-    Active = Color3.fromRGB(46, 204, 113),
+    Active = Color3.fromRGB(0, 200, 80),
     Inactive = Color3.fromRGB(200, 40, 40),
-    Secondary = Color3.fromRGB(30, 30, 30)
+    Secondary = Color3.fromRGB(35, 35, 35)
 }
 
 local function MakeRounded(obj, radius)
@@ -47,80 +47,80 @@ end
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 320, 0, 300) 
-MainFrame.Position = UDim2.new(0.5, -160, 0.5, -150)
+MainFrame.Size = UDim2.new(0, 340, 0, 350) 
+MainFrame.Position = UDim2.new(0.5, -170, 0.5, -175)
 MainFrame.BackgroundColor3 = Colors.Main
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
-MakeRounded(MainFrame, 14)
+MakeRounded(MainFrame, 16)
 MakeStroke(MainFrame, 2.5, Colors.Stroke)
 
 local Title = Instance.new("TextLabel")
 Title.Text = "SEVEN SPEED"
 Title.Size = UDim2.new(1, -20, 0, 30)
-Title.Position = UDim2.new(0, 15, 0, 8)
+Title.Position = UDim2.new(0, 15, 0, 10)
 Title.BackgroundTransparency = 1
 Title.TextColor3 = Colors.Stroke
 Title.Font = Enum.Font.GothamBlack
-Title.TextSize = 20
+Title.TextSize = 22
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = MainFrame
 
 local CloseButton = Instance.new("TextButton")
 CloseButton.Text = "X"
-CloseButton.Size = UDim2.new(0, 28, 0, 28)
-CloseButton.Position = UDim2.new(1, -38, 0, 8)
+CloseButton.Size = UDim2.new(0, 32, 0, 32)
+CloseButton.Position = UDim2.new(1, -42, 0, 10)
 CloseButton.BackgroundColor3 = Colors.Inactive
 CloseButton.TextColor3 = Colors.Text
 CloseButton.Font = Enum.Font.GothamBold
-CloseButton.TextSize = 14
+CloseButton.TextSize = 16
 CloseButton.Parent = MainFrame
-MakeRounded(CloseButton, 6)
+MakeRounded(CloseButton, 8)
 
 local MinimizeButton
 if isMobile then
     MinimizeButton = Instance.new("TextButton")
     MinimizeButton.Text = "_"
-    MinimizeButton.Size = UDim2.new(0, 28, 0, 28)
-    MinimizeButton.Position = UDim2.new(1, -75, 0, 8)
+    MinimizeButton.Size = UDim2.new(0, 32, 0, 32)
+    MinimizeButton.Position = UDim2.new(1, -80, 0, 10)
     MinimizeButton.BackgroundColor3 = Colors.Secondary
     MinimizeButton.TextColor3 = Colors.Stroke
     MinimizeButton.Font = Enum.Font.GothamBold
-    MinimizeButton.TextSize = 14
+    MinimizeButton.TextSize = 16
     MinimizeButton.TextYAlignment = Enum.TextYAlignment.Bottom
     MinimizeButton.Parent = MainFrame
-    MakeRounded(MinimizeButton, 6)
+    MakeRounded(MinimizeButton, 8)
 end
 
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Text = "ATIVAR"
 ToggleButton.Size = UDim2.new(0.9, 0, 0, 45)
-ToggleButton.Position = UDim2.new(0.05, 0, 0.18, 0)
+ToggleButton.Position = UDim2.new(0.05, 0, 0.16, 0)
 ToggleButton.BackgroundColor3 = Colors.Active
 ToggleButton.TextColor3 = Colors.Text
 ToggleButton.Font = Enum.Font.GothamBlack
 ToggleButton.TextSize = 22
 ToggleButton.Parent = MainFrame
-MakeRounded(ToggleButton, 8)
+MakeRounded(ToggleButton, 10)
 
 local SliderBG = Instance.new("TextButton") 
 SliderBG.Text = ""
-SliderBG.Size = UDim2.new(0.9, 0, 0, 8)
-SliderBG.Position = UDim2.new(0.05, 0, 0.50, 0)
+SliderBG.Size = UDim2.new(0.9, 0, 0, 10)
+SliderBG.Position = UDim2.new(0.05, 0, 0.40, 0)
 SliderBG.BackgroundColor3 = Colors.Secondary
 SliderBG.AutoButtonColor = false
 SliderBG.Parent = MainFrame
-MakeRounded(SliderBG, 4)
+MakeRounded(SliderBG, 5)
 
 local SliderFill = Instance.new("Frame")
 SliderFill.Size = UDim2.new(0, 0, 1, 0)
 SliderFill.BackgroundColor3 = Colors.Stroke
 SliderFill.BorderSizePixel = 0
 SliderFill.Parent = SliderBG
-MakeRounded(SliderFill, 4)
+MakeRounded(SliderFill, 5)
 
 local SliderKnob = Instance.new("Frame")
-SliderKnob.Size = UDim2.new(0, 20, 0, 20)
+SliderKnob.Size = UDim2.new(0, 22, 0, 22)
 SliderKnob.AnchorPoint = Vector2.new(0.5, 0.5)
 SliderKnob.Position = UDim2.new(1, 0, 0.5, 0)
 SliderKnob.BackgroundColor3 = Colors.Text
@@ -130,7 +130,7 @@ MakeRounded(SliderKnob, 20)
 local SpeedLabel = Instance.new("TextLabel")
 SpeedLabel.Text = "Velocidade: 0"
 SpeedLabel.Size = UDim2.new(1, 0, 0, 20)
-SpeedLabel.Position = UDim2.new(0, 0, -3.5, 0)
+SpeedLabel.Position = UDim2.new(0, 0, -2.8, 0)
 SpeedLabel.BackgroundTransparency = 1
 SpeedLabel.TextColor3 = Colors.Text
 SpeedLabel.Font = Enum.Font.GothamBold
@@ -138,27 +138,27 @@ SpeedLabel.TextSize = 16
 SpeedLabel.Parent = SliderBG
 
 local ShiftLockBtn = Instance.new("TextButton")
-ShiftLockBtn.Text = "Shift Lock Necessário: OFF"
-ShiftLockBtn.Size = UDim2.new(0.9, 0, 0, 35)
-ShiftLockBtn.Position = UDim2.new(0.05, 0, 0.62, 0)
+ShiftLockBtn.Text = "SHIFT LOCK: [OFF]"
+ShiftLockBtn.Size = UDim2.new(0.9, 0, 0, 40)
+ShiftLockBtn.Position = UDim2.new(0.05, 0, 0.52, 0)
 ShiftLockBtn.BackgroundColor3 = Colors.Secondary
 ShiftLockBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
 ShiftLockBtn.Font = Enum.Font.GothamBold
-ShiftLockBtn.TextSize = 14
+ShiftLockBtn.TextSize = 16
 ShiftLockBtn.Parent = MainFrame
 MakeRounded(ShiftLockBtn, 8)
 MakeStroke(ShiftLockBtn, 1, Colors.Secondary)
 
 local DragButton = Instance.new("TextButton")
 DragButton.Text = "@"
-DragButton.Size = UDim2.new(0, 32, 0, 32)
-DragButton.Position = UDim2.new(1, -40, 1, -40)
+DragButton.Size = UDim2.new(0, 36, 0, 36)
+DragButton.Position = UDim2.new(1, -45, 1, -45)
 DragButton.BackgroundColor3 = Colors.Secondary
 DragButton.TextColor3 = Colors.Stroke
 DragButton.Font = Enum.Font.GothamBold
-DragButton.TextSize = 18
+DragButton.TextSize = 20
 DragButton.Parent = MainFrame
-MakeRounded(DragButton, 8)
+MakeRounded(DragButton, 10)
 MakeStroke(DragButton, 1, Colors.Stroke)
 
 local ConfirmFrame = Instance.new("Frame")
@@ -167,7 +167,7 @@ ConfirmFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 ConfirmFrame.BackgroundColor3 = Colors.Main
 ConfirmFrame.ClipsDescendants = true
 ConfirmFrame.Visible = false
-ConfirmFrame.ZIndex = 5
+ConfirmFrame.ZIndex = 10
 ConfirmFrame.Parent = ScreenGui
 MakeRounded(ConfirmFrame, 12)
 MakeStroke(ConfirmFrame, 2, Colors.Stroke)
@@ -178,8 +178,8 @@ ConfirmText.Size = UDim2.new(1, 0, 0.4, 0)
 ConfirmText.BackgroundTransparency = 1
 ConfirmText.TextColor3 = Colors.Text
 ConfirmText.Font = Enum.Font.GothamBold
-ConfirmText.TextSize = 18
-ConfirmText.ZIndex = 6
+ConfirmText.TextSize = 20
+ConfirmText.ZIndex = 11
 ConfirmText.Parent = ConfirmFrame
 
 local YesButton = Instance.new("TextButton")
@@ -189,9 +189,9 @@ YesButton.Position = UDim2.new(0.05, 0, 0.5, 0)
 YesButton.BackgroundColor3 = Colors.Inactive
 YesButton.TextColor3 = Colors.Text
 YesButton.Font = Enum.Font.GothamBold
-YesButton.ZIndex = 6
+YesButton.ZIndex = 11
 YesButton.Parent = ConfirmFrame
-MakeRounded(YesButton, 6)
+MakeRounded(YesButton, 8)
 
 local NoButton = Instance.new("TextButton")
 NoButton.Text = "NÃO"
@@ -200,32 +200,32 @@ NoButton.Position = UDim2.new(0.55, 0, 0.5, 0)
 NoButton.BackgroundColor3 = Colors.Active
 NoButton.TextColor3 = Colors.Text
 NoButton.Font = Enum.Font.GothamBold
-NoButton.ZIndex = 6
+NoButton.ZIndex = 11
 NoButton.Parent = ConfirmFrame
-MakeRounded(NoButton, 6)
+MakeRounded(NoButton, 8)
 
 local HotKeyButton
 if pcMode then
     HotKeyButton = Instance.new("TextButton")
-    HotKeyButton.Text = "HotKey: [Nenhuma]"
-    HotKeyButton.Size = UDim2.new(0.9, 0, 0, 35)
-    HotKeyButton.Position = UDim2.new(0.05, 0, 0.78, 0)
+    HotKeyButton.Text = "HOTKEY: [Nenhuma]"
+    HotKeyButton.Size = UDim2.new(0.9, 0, 0, 40)
+    HotKeyButton.Position = UDim2.new(0.05, 0, 0.70, 0)
     HotKeyButton.BackgroundColor3 = Colors.Secondary
     HotKeyButton.TextColor3 = Colors.Text
     HotKeyButton.Font = Enum.Font.GothamBold
     HotKeyButton.TextSize = 14
     HotKeyButton.Parent = MainFrame
-    MakeRounded(HotKeyButton, 6)
+    MakeRounded(HotKeyButton, 8)
     MakeStroke(HotKeyButton, 1, Colors.Stroke)
     
     local PCInfo = Instance.new("TextLabel")
     PCInfo.Text = "Aperte 'V' para esconder o menu"
     PCInfo.Size = UDim2.new(1, 0, 0, 20)
-    PCInfo.Position = UDim2.new(0, 0, 0.92, 0)
+    PCInfo.Position = UDim2.new(0, 0, 0.90, 0)
     PCInfo.BackgroundTransparency = 1
     PCInfo.TextColor3 = Color3.fromRGB(150, 150, 150)
     PCInfo.Font = Enum.Font.Gotham
-    PCInfo.TextSize = 11
+    PCInfo.TextSize = 12
     PCInfo.Parent = MainFrame
 end
 
@@ -247,7 +247,6 @@ local enabled = false
 local shiftLockReq = false
 local speedValue = 0
 local draggingSlider = false
-local isDraggingMenu = false
 local waitingForKey = false
 local boundKey = nil
 local dbJump = false
@@ -268,12 +267,14 @@ SliderBG.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         draggingSlider = true
         UpdateSlider()
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        draggingSlider = false
+        
+        local con
+        con = UserInputService.InputEnded:Connect(function(endInput)
+            if endInput.UserInputType == Enum.UserInputType.MouseButton1 or endInput.UserInputType == Enum.UserInputType.Touch then
+                draggingSlider = false
+                con:Disconnect()
+            end
+        end)
     end
 end)
 
@@ -281,26 +282,27 @@ RunService.RenderStepped:Connect(function()
     if draggingSlider then UpdateSlider() end
 end)
 
-local dragStart, startPos
-
 DragButton.InputBegan:Connect(function(input)
-    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not draggingSlider then
-        isDraggingMenu = true
-        dragStart = input.Position
-        startPos = MainFrame.Position
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if isDraggingMenu and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - dragStart
-        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        isDraggingMenu = false
+        local dragStart = input.Position
+        local startPos = MainFrame.Position
+        local isDragging = true
+        
+        local moveCon, endCon
+        moveCon = UserInputService.InputChanged:Connect(function(mv)
+            if isDragging and (mv.UserInputType == Enum.UserInputType.MouseMovement or mv.UserInputType == Enum.UserInputType.Touch) then
+                local delta = mv.Position - dragStart
+                MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+        end)
+        
+        endCon = UserInputService.InputEnded:Connect(function(endIn)
+            if endIn == input then
+                isDragging = false
+                moveCon:Disconnect()
+                endCon:Disconnect()
+            end
+        end)
     end
 end)
 
@@ -309,12 +311,6 @@ local function ToggleState()
     if enabled then
         ToggleButton.Text = "DESATIVAR"
         ToggleButton.BackgroundColor3 = Colors.Inactive
-        
-        local s = ToggleButton:FindFirstChild("UIStroke") or MakeStroke(ToggleButton, 0, Colors.Text)
-        local t1 = TweenService:Create(s, TweenInfo.new(0.2), {Thickness = 3, Color = Colors.Text})
-        t1:Play()
-        t1.Completed:Wait()
-        TweenService:Create(s, TweenInfo.new(0.2), {Thickness = 0}):Play()
     else
         ToggleButton.Text = "ATIVAR"
         ToggleButton.BackgroundColor3 = Colors.Active
@@ -326,12 +322,12 @@ ToggleButton.MouseButton1Click:Connect(ToggleState)
 ShiftLockBtn.MouseButton1Click:Connect(function()
     shiftLockReq = not shiftLockReq
     if shiftLockReq then
-        ShiftLockBtn.Text = "Shift Lock Necessário: ON"
+        ShiftLockBtn.Text = "SHIFT LOCK: [ON]"
         ShiftLockBtn.TextColor3 = Colors.Text
         local s = ShiftLockBtn:FindFirstChild("UIStroke")
         if s then s.Color = Colors.Active end
     else
-        ShiftLockBtn.Text = "Shift Lock Necessário: OFF"
+        ShiftLockBtn.Text = "SHIFT LOCK: [OFF]"
         ShiftLockBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
         local s = ShiftLockBtn:FindFirstChild("UIStroke")
         if s then s.Color = Colors.Secondary end
@@ -347,7 +343,7 @@ if pcMode then
     UserInputService.InputBegan:Connect(function(input, gp)
         if waitingForKey and input.UserInputType == Enum.UserInputType.Keyboard then
             boundKey = input.KeyCode
-            HotKeyButton.Text = "HotKey: [" .. input.KeyCode.Name .. "]"
+            HotKeyButton.Text = "HOTKEY: [" .. input.KeyCode.Name .. "]"
             waitingForKey = false
         elseif not gp then
             if input.KeyCode == Enum.KeyCode.V then
@@ -360,37 +356,45 @@ if pcMode then
 end
 
 if isMobile then
-    local bDrag = false
-    local bStart, bPos
-    local moved = false
-
     FloatingBall.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-            bDrag = true
-            bStart = input.Position
-            bPos = FloatingBall.Position
-            moved = false
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if bDrag and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - bStart
-            if delta.Magnitude > 10 then moved = true end
-            FloatingBall.Position = UDim2.new(bPos.X.Scale, bPos.X.Offset + delta.X, bPos.Y.Scale, bPos.Y.Offset + delta.Y)
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-            bDrag = false
-            if not moved then
-                FloatingBall.Visible = false
-                MainFrame.Visible = true
-                MainFrame.Size = UDim2.new(0,0,0,0)
-                MainFrame.Position = UDim2.new(0.5, -160, 0.5, -150)
-                TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back), {Size = UDim2.new(0, 320, 0, 300)}):Play()
-            end
+            local bStart = input.Position
+            local bPos = FloatingBall.Position
+            local moved = false
+            local dragging = true
+            
+            local moveConn, endConn
+            
+            moveConn = UserInputService.InputChanged:Connect(function(mvInput)
+                if dragging and (mvInput.UserInputType == Enum.UserInputType.MouseMovement or mvInput.UserInputType == Enum.UserInputType.Touch) then
+                    local delta = mvInput.Position - bStart
+                    if delta.Magnitude > 15 then 
+                        moved = true 
+                        FloatingBall.Position = UDim2.new(bPos.X.Scale, bPos.X.Offset + delta.X, bPos.Y.Scale, bPos.Y.Offset + delta.Y)
+                    end
+                end
+            end)
+            
+            endConn = UserInputService.InputEnded:Connect(function(endInput)
+                if endInput == input then 
+                    dragging = false
+                    moveConn:Disconnect()
+                    endConn:Disconnect()
+                    
+                    if not moved then
+                        FloatingBall.Visible = false
+                        MainFrame.Visible = true
+                        
+                        -- Abre onde a bolinha estava
+                        local currentBallPos = FloatingBall.AbsolutePosition
+                        MainFrame.Position = UDim2.new(0, currentBallPos.X, 0, currentBallPos.Y)
+                        MainFrame.Size = UDim2.new(0, 0, 0, 0)
+                        
+                        local t = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), {Size = UDim2.new(0, 340, 0, 350)})
+                        t:Play()
+                    end
+                end
+            end)
         end
     end)
 
@@ -401,7 +405,7 @@ if isMobile then
         t.Completed:Wait()
         MainFrame.Visible = false
         
-        FloatingBall.Position = UDim2.new(0, absPos.X + 160, 0, absPos.Y + 150)
+        FloatingBall.Position = UDim2.new(0, absPos.X, 0, absPos.Y)
         FloatingBall.Visible = true
         TweenService:Create(FloatingBall, TweenInfo.new(0.4, Enum.EasingStyle.Elastic), {Size = UDim2.new(0, 50, 0, 50)}):Play()
     end)
