@@ -3,7 +3,6 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
-local Debris = game:GetService("Debris")
 local LocalPlayer = Players.LocalPlayer
 
 if CoreGui:FindFirstChild("SevenSpeedGUI") then
@@ -386,6 +385,7 @@ if isMobile then
                         FloatingBall.Visible = false
                         MainFrame.Visible = true
                         
+                        -- Abre onde a bolinha estava
                         local currentBallPos = FloatingBall.AbsolutePosition
                         MainFrame.Position = UDim2.new(0, currentBallPos.X, 0, currentBallPos.Y)
                         MainFrame.Size = UDim2.new(0, 0, 0, 0)
@@ -441,17 +441,11 @@ UserInputService.JumpRequest:Connect(function()
     local hum = char:FindFirstChild("Humanoid")
     local root = char:FindFirstChild("HumanoidRootPart")
     
-    if hum and root and hum.FloorMaterial ~= Enum.Material.Air and hum.MoveDirection.Magnitude > 0 then
+    if hum and root and hum.MoveDirection.Magnitude > 0 then
         dbJump = true
-        
-        local bv = Instance.new("BodyVelocity")
-        bv.MaxForce = Vector3.new(100000, 100000, 100000)
-        bv.Velocity = Vector3.new(hum.MoveDirection.X * speedValue, 50, hum.MoveDirection.Z * speedValue)
-        bv.Parent = root
-        
-        Debris:AddItem(bv, 0.15)
-        
-        task.wait(0.2)
+        local vel = hum.MoveDirection * speedValue
+        root.AssemblyLinearVelocity = Vector3.new(vel.X, 60, vel.Z)
+        task.wait(0.15)
         dbJump = false
     end
 end)
