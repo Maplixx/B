@@ -1,7 +1,7 @@
 --[[
-    SEVEN UNIVERSAL AIMBOT (MOBILE PRO)
+    SEVEN UNIVERSAL AIMBOT (MOBILE ULTRA)
     Developer: Seven
-    Features: Customizable Floating Trigger, Metatable Silent Aim, ESP
+    Features: Dual Floating Triggers (Aim/Shoot), Silent Aim Hook, Fixed ESP
     GUI: Rayfield Library
 ]]
 
@@ -25,7 +25,8 @@ local Config = {
         ShowFOV = false,
         Smoothness = 0,
         TargetPart = "Head",
-        TriggerActive = false
+        AimActive = false,
+        ShootActive = false
     },
     SilentAim = {
         Enabled = false,
@@ -43,11 +44,18 @@ local Config = {
         Skeleton = false,
         Color = Color3.fromRGB(255, 255, 255)
     },
-    Trigger = {
+    TriggerAim = {
+        Show = false,
+        Position = Vector2.new(Camera.ViewportSize.X * 0.2, Camera.ViewportSize.Y * 0.5),
+        Size = 50,
+        Color = Color3.fromRGB(0, 150, 255),
+        Transparency = 0.5
+    },
+    TriggerShoot = {
         Show = false,
         Position = Vector2.new(Camera.ViewportSize.X * 0.8, Camera.ViewportSize.Y * 0.7),
         Size = 50,
-        Color = Color3.fromRGB(0, 255, 0),
+        Color = Color3.fromRGB(255, 50, 50),
         Transparency = 0.5
     },
     Misc = {
@@ -70,7 +78,8 @@ end
 
 local FOVCircle = CreateCircle(Color3.fromRGB(255, 255, 255))
 local SilentFOVCircle = CreateCircle(Color3.fromRGB(255, 0, 0))
-local TriggerCircle = CreateCircle(Config.Trigger.Color, true)
+local TriggerAimCircle = CreateCircle(Config.TriggerAim.Color, true)
+local TriggerShootCircle = CreateCircle(Config.TriggerShoot.Color, true)
 
 -- Storage
 local ESP_Objects = {}
@@ -80,13 +89,20 @@ local function IsVisible(part)
     if not part then return false end
     local char = LocalPlayer.Character
     if not char then return false end
+    
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
     params.FilterDescendantsInstances = {char, Camera}
+    
     local origin = Camera.CFrame.Position
     local direction = (part.Position - origin).Unit * (part.Position - origin).Magnitude
+    
     local result = workspace:Raycast(origin, direction, params)
-    return result and result.Instance:IsDescendantOf(part.Parent) or false
+    
+    if result and result.Instance:IsDescendantOf(part.Parent) then
+        return true
+    end
+    return false
 end
 
 local function GetClosestPlayer(fov, teamCheckEnabled, visibleCheckEnabled, targetPartName)
@@ -105,6 +121,7 @@ local function GetClosestPlayer(fov, teamCheckEnabled, visibleCheckEnabled, targ
 
             if part then
                 if visibleCheckEnabled and not IsVisible(part) then continue end
+                
                 local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
                 if onScreen then
                     local distance = (Vector2.new(pos.X, pos.Y) - screenCenter).Magnitude
@@ -149,27 +166,30 @@ end)
 
 setreadonly(mt, true)
 
--- Trigger Detection
+-- Dual Trigger Detection
 UserInputService.InputBegan:Connect(function(input, processed)
     if not processed and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1) then
         local touchPos = Vector2.new(input.Position.X, input.Position.Y)
-        local dist = (touchPos - Config.Trigger.Position).Magnitude
-        if dist <= Config.Trigger.Size then
-            Config.Aimbot.TriggerActive = true
+        if (touchPos - Config.TriggerAim.Position).Magnitude <= Config.TriggerAim.Size then
+            Config.Aimbot.AimActive = true
+        end
+        if (touchPos - Config.TriggerShoot.Position).Magnitude <= Config.TriggerShoot.Size then
+            Config.Aimbot.ShootActive = true
         end
     end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        Config.Aimbot.TriggerActive = false
+        Config.Aimbot.AimActive = false
+        Config.Aimbot.ShootActive = false
     end
 end)
 
--- ESP Logic (Stable)
+-- ESP Logic (Fixed)
 local function CreateESP(player)
     local drawings = { Box = Drawing.new("Square"), Name = Drawing.new("Text"), Skeleton = {} }
-    drawings.Box.Visible = false; drawings.Box.Color = Config.Visuals.Color; drawings.Box.Thickness = 1
+    drawings.Box.Visible = false; drawings.Box.Color = Config.Visuals.Color; drawings.Box.Thickness = 1; drawings.Box.Filled = false
     drawings.Name.Visible = false; drawings.Name.Color = Config.Visuals.Color; drawings.Name.Size = 14; drawings.Name.Center = true; drawings.Name.Outline = true
     for i = 1, 15 do
         local line = Drawing.new("Line")
@@ -253,15 +273,12 @@ RenderSteppedConnection = RunService.RenderStepped:Connect(function()
     FOVCircle.Position = screenCenter; FOVCircle.Radius = Config.Aimbot.FOV; FOVCircle.Visible = Config.Aimbot.ShowFOV
     SilentFOVCircle.Position = screenCenter; SilentFOVCircle.Radius = Config.SilentAim.FOV; SilentFOVCircle.Visible = Config.SilentAim.ShowFOV
     
-    -- Trigger UI Update
-    TriggerCircle.Position = Config.Trigger.Position
-    TriggerCircle.Radius = Config.Trigger.Size
-    TriggerCircle.Visible = Config.Trigger.Show
-    TriggerCircle.Transparency = Config.Trigger.Transparency
-    TriggerCircle.Color = Config.Trigger.Color
+    -- Triggers UI Update
+    TriggerAimCircle.Position = Config.TriggerAim.Position; TriggerAimCircle.Radius = Config.TriggerAim.Size; TriggerAimCircle.Visible = Config.TriggerAim.Show; TriggerAimCircle.Transparency = Config.TriggerAim.Transparency; TriggerAimCircle.Color = Config.TriggerAim.Color
+    TriggerShootCircle.Position = Config.TriggerShoot.Position; TriggerShootCircle.Radius = Config.TriggerShoot.Size; TriggerShootCircle.Visible = Config.TriggerShoot.Show; TriggerShootCircle.Transparency = Config.TriggerShoot.Transparency; TriggerShootCircle.Color = Config.TriggerShoot.Color
 
-    -- Mobile Aimbot Logic (Trigger Active)
-    if Config.Aimbot.Enabled and Config.Aimbot.TriggerActive then
+    -- Mobile Aimbot Logic (Dual Trigger)
+    if Config.Aimbot.Enabled and (Config.Aimbot.AimActive or Config.Aimbot.ShootActive) then
         local target = GetClosestPlayer(Config.Aimbot.FOV, Config.Aimbot.TeamCheck, Config.Aimbot.VisibleCheck, Config.Aimbot.TargetPart)
         if target and target.Character then
             local part = target.Character:FindFirstChild(Config.Aimbot.TargetPart)
@@ -294,8 +311,8 @@ end)
 
 -- UI Setup
 local Window = Rayfield:CreateWindow({
-    Name = "Seven Universal Mobile PRO",
-    LoadingTitle = "Seven Mobile Pro Edition",
+    Name = "Seven Universal Mobile ULTRA",
+    LoadingTitle = "Seven Mobile Ultra V4",
     LoadingSubtitle = "by Seven",
     ConfigurationSaving = { Enabled = false },
     Keybind = "RightShift"
@@ -308,7 +325,7 @@ local MiscTab = Window:CreateTab("Misc")
 local SettingsTab = Window:CreateTab("Configurações")
 
 -- Aimbot Tab
-AimbotTab:CreateToggle({ Name = "Ativar Aimbot (Gatilho)", CurrentValue = false, Callback = function(v) Config.Aimbot.Enabled = v end })
+AimbotTab:CreateToggle({ Name = "Ativar Aimbot", CurrentValue = false, Callback = function(v) Config.Aimbot.Enabled = v end })
 AimbotTab:CreateDropdown({ Name = "Alvo", Options = {"Head", "HumanoidRootPart"}, CurrentOption = "Head", Callback = function(v) Config.Aimbot.TargetPart = v end })
 AimbotTab:CreateToggle({ Name = "Somente Visíveis", CurrentValue = false, Callback = function(v) Config.Aimbot.VisibleCheck = v end })
 AimbotTab:CreateSlider({ Name = "FOV", Range = {0, 500}, Increment = 1, Suffix = "px", CurrentValue = 150, Callback = function(v) Config.Aimbot.FOV = v end })
@@ -316,17 +333,16 @@ AimbotTab:CreateSlider({ Name = "Suavização", Range = {0, 100}, Increment = 1,
 AimbotTab:CreateToggle({ Name = "Mostrar FOV", CurrentValue = false, Callback = function(v) Config.Aimbot.ShowFOV = v end })
 AimbotTab:CreateToggle({ Name = "Team Check", CurrentValue = true, Callback = function(v) Config.Aimbot.TeamCheck = v end })
 
--- Trigger Configuration
-AimbotTab:CreateSection("Configuração do Gatilho")
-AimbotTab:CreateToggle({ Name = "Mostrar Botão Gatilho", CurrentValue = false, Callback = function(v) Config.Trigger.Show = v end })
-AimbotTab:CreateSlider({ Name = "Posição X", Range = {0, Camera.ViewportSize.X}, Increment = 1, Suffix = "px", CurrentValue = Config.Trigger.Position.X, Callback = function(v) 
-    Config.Trigger.Position = Vector2.new(v, Config.Trigger.Position.Y) 
-end })
-AimbotTab:CreateSlider({ Name = "Posição Y", Range = {0, Camera.ViewportSize.Y}, Increment = 1, Suffix = "px", CurrentValue = Config.Trigger.Position.Y, Callback = function(v) 
-    Config.Trigger.Position = Vector2.new(Config.Trigger.Position.X, v) 
-end })
-AimbotTab:CreateSlider({ Name = "Tamanho do Gatilho", Range = {10, 200}, Increment = 1, Suffix = "px", CurrentValue = 50, Callback = function(v) Config.Trigger.Size = v end })
-AimbotTab:CreateColorPicker({ Name = "Cor do Gatilho", Color = Config.Trigger.Color, Callback = function(v) Config.Trigger.Color = v end })
+-- Dual Trigger Config
+AimbotTab:CreateSection("Gatilho de MIRA (Azul)")
+AimbotTab:CreateToggle({ Name = "Mostrar Gatilho Mira", CurrentValue = false, Callback = function(v) Config.TriggerAim.Show = v end })
+AimbotTab:CreateSlider({ Name = "Posição X (Mira)", Range = {0, Camera.ViewportSize.X}, Increment = 1, Suffix = "px", CurrentValue = Config.TriggerAim.Position.X, Callback = function(v) Config.TriggerAim.Position = Vector2.new(v, Config.TriggerAim.Position.Y) end })
+AimbotTab:CreateSlider({ Name = "Posição Y (Mira)", Range = {0, Camera.ViewportSize.Y}, Increment = 1, Suffix = "px", CurrentValue = Config.TriggerAim.Position.Y, Callback = function(v) Config.TriggerAim.Position = Vector2.new(Config.TriggerAim.Position.X, v) end })
+
+AimbotTab:CreateSection("Gatilho de TIRO (Vermelho)")
+AimbotTab:CreateToggle({ Name = "Mostrar Gatilho Tiro", CurrentValue = false, Callback = function(v) Config.TriggerShoot.Show = v end })
+AimbotTab:CreateSlider({ Name = "Posição X (Tiro)", Range = {0, Camera.ViewportSize.X}, Increment = 1, Suffix = "px", CurrentValue = Config.TriggerShoot.Position.X, Callback = function(v) Config.TriggerShoot.Position = Vector2.new(v, Config.TriggerShoot.Position.Y) end })
+AimbotTab:CreateSlider({ Name = "Posição Y (Tiro)", Range = {0, Camera.ViewportSize.Y}, Increment = 1, Suffix = "px", CurrentValue = Config.TriggerShoot.Position.Y, Callback = function(v) Config.TriggerShoot.Position = Vector2.new(Config.TriggerShoot.Position.X, v) end })
 
 -- Silent Aim Tab
 SilentAimTab:CreateToggle({ Name = "Ativar Silent Aim", CurrentValue = false, Callback = function(v) Config.SilentAim.Enabled = v end })
@@ -354,7 +370,7 @@ MiscTab:CreateSlider({ Name = "Profundidade", Range = {-5, 2}, Increment = 0.1, 
 
 local function Unload()
     RenderSteppedConnection:Disconnect()
-    FOVCircle:Remove(); SilentFOVCircle:Remove(); TriggerCircle:Remove()
+    FOVCircle:Remove(); SilentFOVCircle:Remove(); TriggerAimCircle:Remove(); TriggerShootCircle:Remove()
     for _, obj in pairs(ESP_Objects) do
         obj.Box:Remove(); obj.Name:Remove()
         for _, l in pairs(obj.Skeleton) do l:Remove() end
