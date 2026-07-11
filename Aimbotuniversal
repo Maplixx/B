@@ -1,0 +1,337 @@
+--[[
+    SEVEN UNIVERSAL AIMBOT (SOLARA EDITION)
+    Developer: Seven
+    Compatibility: Solara / Basic Executors
+    Features: Fast-CFrame Silent Aim, Visible Check, HipHeight Crouch, ESP
+    GUI: Rayfield Library
+]]
+
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Configuration
+local Config = {
+    Aimbot = {
+        Enabled = false,
+        TeamCheck = true,
+        VisibleCheck = false,
+        FOV = 150,
+        ShowFOV = false,
+        Smoothness = 0,
+        TargetPart = "Head",
+        UseLMB = false,
+        UseRMB = false
+    },
+    SilentAim = {
+        Enabled = false,
+        TeamCheck = true,
+        VisibleCheck = false,
+        FOV = 300,
+        ShowFOV = false,
+        TargetPart = "Head"
+    },
+    Visuals = {
+        Enabled = false,
+        TeamCheck = true,
+        Box = false,
+        Name = false,
+        Skeleton = false,
+        Color = Color3.fromRGB(255, 255, 255)
+    },
+    Misc = {
+        CustomCrouch = false,
+        CrouchOffset = -3,
+        OriginalHipHeight = 2
+    }
+}
+
+-- Drawing API Elements
+local function CreateCircle(color)
+    local c = Drawing.new("Circle")
+    c.Visible = false
+    c.Thickness = 1
+    c.NumSides = 64
+    c.Filled = false
+    c.Color = color
+    return c
+end
+
+local FOVCircle = CreateCircle(Color3.fromRGB(255, 255, 255))
+local SilentFOVCircle = CreateCircle(Color3.fromRGB(255, 0, 0))
+
+-- Storage
+local ESP_Objects = {}
+
+-- Utility Functions
+local function IsVisible(part)
+    if not part then return false end
+    local char = LocalPlayer.Character
+    if not char then return false end
+    
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    params.FilterDescendantsInstances = {char, Camera}
+    
+    local origin = Camera.CFrame.Position
+    local direction = (part.Position - origin).Unit * (part.Position - origin).Magnitude
+    
+    local result = workspace:Raycast(origin, direction, params)
+    
+    if result and result.Instance:IsDescendantOf(part.Parent) then
+        return true
+    end
+    return false
+end
+
+local function GetClosestPlayer(fov, teamCheckEnabled, visibleCheckEnabled, targetPartName)
+    local target = nil
+    local shortestDistance = fov or math.huge
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health > 0 then
+            if teamCheckEnabled and player.Team == LocalPlayer.Team then continue end
+            
+            local part = player.Character:FindFirstChild(targetPartName)
+            if not part and targetPartName == "HumanoidRootPart" then
+                part = player.Character:FindFirstChild("Torso") or player.Character:FindFirstChild("UpperTorso")
+            end
+
+            if part then
+                if visibleCheckEnabled and not IsVisible(part) then continue end
+                
+                local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
+                if onScreen then
+                    local distance = (Vector2.new(pos.X, pos.Y) - screenCenter).Magnitude
+                    if distance < shortestDistance then
+                        target = player
+                        shortestDistance = distance
+                    end
+                end
+            end
+        end
+    end
+    return target
+end
+
+-- ESP Logic (Stable)
+local function CreateESP(player)
+    local drawings = { Box = Drawing.new("Square"), Name = Drawing.new("Text"), Skeleton = {} }
+    drawings.Box.Visible = false; drawings.Box.Color = Config.Visuals.Color; drawings.Box.Thickness = 1
+    drawings.Name.Visible = false; drawings.Name.Color = Config.Visuals.Color; drawings.Name.Size = 14; drawings.Name.Center = true; drawings.Name.Outline = true
+    for i = 1, 15 do
+        local line = Drawing.new("Line")
+        line.Visible = false; line.Color = Config.Visuals.Color; line.Thickness = 1
+        drawings.Skeleton[i] = line
+    end
+    ESP_Objects[player] = drawings
+end
+
+local function UpdateESP(player, drawings)
+    local character = player.Character
+    if not character or not character:FindFirstChild("HumanoidRootPart") or not character:FindFirstChild("Humanoid") or character.Humanoid.Health <= 0 then
+        drawings.Box.Visible = false; drawings.Name.Visible = false
+        for _, line in pairs(drawings.Skeleton) do line.Visible = false end
+        return
+    end
+    local hrp = character.HumanoidRootPart
+    local head = character:FindFirstChild("Head")
+    if not head then return end
+    local hrpPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+    local visible = Config.Visuals.Enabled
+    if Config.Visuals.TeamCheck and player.Team == LocalPlayer.Team then visible = false end
+    if onScreen and visible then
+        local topPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+        local bottomPos = Camera:WorldToViewportPoint(hrp.Position - Vector3.new(0, 3, 0))
+        local height = math.abs(topPos.Y - bottomPos.Y)
+        local width = height / 1.5
+        if Config.Visuals.Box then
+            drawings.Box.Size = Vector2.new(width, height)
+            drawings.Box.Position = Vector2.new(hrpPos.X - width / 2, hrpPos.Y - height / 2)
+            drawings.Box.Visible = true
+        else drawings.Box.Visible = false end
+        if Config.Visuals.Name then
+            drawings.Name.Text = player.Name
+            drawings.Name.Position = Vector2.new(hrpPos.X, hrpPos.Y - height / 2 - 15)
+            drawings.Name.Visible = true
+        else drawings.Name.Visible = false end
+        if Config.Visuals.Skeleton then
+            local function getPart(name) return character:FindFirstChild(name) end
+            local function getPos(part)
+                if not part then return nil end
+                local p, os = Camera:WorldToViewportPoint(part.Position)
+                return os and Vector2.new(p.X, p.Y) or nil
+            end
+            local lines = {}
+            if character.Humanoid.RigType == Enum.HumanoidRigType.R15 then
+                lines = {
+                    {getPart("Head"), getPart("UpperTorso")}, {getPart("UpperTorso"), getPart("LowerTorso")},
+                    {getPart("UpperTorso"), getPart("LeftUpperArm")}, {getPart("LeftUpperArm"), getPart("LeftLowerArm")},
+                    {getPart("LeftLowerArm"), getPart("LeftHand")}, {getPart("UpperTorso"), getPart("RightUpperArm")},
+                    {getPart("RightUpperArm"), getPart("RightLowerArm")}, {getPart("RightLowerArm"), getPart("RightHand")},
+                    {getPart("LowerTorso"), getPart("LeftUpperLeg")}, {getPart("LeftUpperLeg"), getPart("LeftLowerLeg")},
+                    {getPart("LeftLowerLeg"), getPart("LeftFoot")}, {getPart("LowerTorso"), getPart("RightUpperLeg")},
+                    {getPart("RightUpperLeg"), getPart("RightLowerLeg")}, {getPart("RightLowerLeg"), getPart("RightFoot")}
+                }
+            else
+                lines = {
+                    {getPart("Head"), getPart("Torso")}, {getPart("Torso"), getPart("Left Arm")},
+                    {getPart("Torso"), getPart("Right Arm")}, {getPart("Torso"), getPart("Left Leg")},
+                    {getPart("Torso"), getPart("Right Leg")}
+                }
+            end
+            for i, parts in ipairs(lines) do
+                local p1 = getPos(parts[1]); local p2 = getPos(parts[2])
+                if p1 and p2 and drawings.Skeleton[i] then
+                    drawings.Skeleton[i].From = p1; drawings.Skeleton[i].To = p2; drawings.Skeleton[i].Visible = true
+                elseif drawings.Skeleton[i] then drawings.Skeleton[i].Visible = false end
+            end
+            for i = #lines + 1, 15 do if drawings.Skeleton[i] then drawings.Skeleton[i].Visible = false end end
+        else for _, line in pairs(drawings.Skeleton) do line.Visible = false end end
+    else
+        drawings.Box.Visible = false; drawings.Name.Visible = false
+        for _, line in pairs(drawings.Skeleton) do line.Visible = false end
+    end
+end
+
+-- Main Loop
+local RenderSteppedConnection
+RenderSteppedConnection = RunService.RenderStepped:Connect(function()
+    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    FOVCircle.Position = screenCenter; FOVCircle.Radius = Config.Aimbot.FOV; FOVCircle.Visible = Config.Aimbot.ShowFOV
+    SilentFOVCircle.Position = screenCenter; SilentFOVCircle.Radius = Config.SilentAim.FOV; SilentFOVCircle.Visible = Config.SilentAim.ShowFOV
+    
+    -- Aimbot Logic (Camera Movement)
+    local aimActive = (Config.Aimbot.UseLMB and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)) or 
+                      (Config.Aimbot.UseRMB and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2))
+    
+    if Config.Aimbot.Enabled and aimActive then
+        local target = GetClosestPlayer(Config.Aimbot.FOV, Config.Aimbot.TeamCheck, Config.Aimbot.VisibleCheck, Config.Aimbot.TargetPart)
+        if target and target.Character then
+            local part = target.Character:FindFirstChild(Config.Aimbot.TargetPart)
+            if not part and Config.Aimbot.TargetPart == "HumanoidRootPart" then
+                part = target.Character:FindFirstChild("Torso") or target.Character:FindFirstChild("UpperTorso")
+            end
+            if part then
+                if Config.Aimbot.Smoothness <= 0 then
+                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, part.Position)
+                else
+                    local lerpAmount = (1 - Config.Aimbot.Smoothness) * 0.25 + 0.005
+                    Camera.CFrame = Camera.CFrame:Lerp(CFrame.new(Camera.CFrame.Position, part.Position), lerpAmount)
+                end
+            end
+        end
+    end
+    
+    -- Silent Aim (Solara Optimized - No Cam Movement)
+    -- This method works by snapping the camera for a split microsecond during firing.
+    -- Solara supports task.wait() and fast execution which makes this effective.
+    if Config.SilentAim.Enabled and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+        local target = GetClosestPlayer(Config.SilentAim.FOV, Config.SilentAim.TeamCheck, Config.SilentAim.VisibleCheck, Config.SilentAim.TargetPart)
+        if target and target.Character then
+            local part = target.Character:FindFirstChild(Config.SilentAim.TargetPart)
+            if not part and Config.SilentAim.TargetPart == "HumanoidRootPart" then
+                part = target.Character:FindFirstChild("Torso") or target.Character:FindFirstChild("UpperTorso")
+            end
+            if part then
+                local oldCFrame = Camera.CFrame
+                Camera.CFrame = CFrame.new(Camera.CFrame.Position, part.Position)
+                -- Immediate restoration within the engine's cycle
+                RunService.Heartbeat:Wait()
+                Camera.CFrame = oldCFrame
+            end
+        end
+    end
+
+    -- HipHeight Crouch (Stable)
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        local hum = LocalPlayer.Character.Humanoid
+        if Config.Misc.CustomCrouch and UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+            hum.HipHeight = Config.Misc.CrouchOffset
+        else
+            hum.HipHeight = Config.Misc.OriginalHipHeight
+        end
+    end
+
+    for player, drawings in pairs(ESP_Objects) do UpdateESP(player, drawings) end
+end)
+
+-- UI Setup
+local Window = Rayfield:CreateWindow({
+    Name = "Seven Universal Aimbot",
+    LoadingTitle = "Seven Solara V3",
+    LoadingSubtitle = "by Seven",
+    ConfigurationSaving = { Enabled = false },
+    Keybind = "RightShift"
+})
+
+local AimbotTab = Window:CreateTab("Aimbot")
+local SilentAimTab = Window:CreateTab("Silent Aim")
+local VisualsTab = Window:CreateTab("Visuals")
+local MiscTab = Window:CreateTab("Misc")
+local SettingsTab = Window:CreateTab("Configurações")
+
+-- Aimbot Tab
+AimbotTab:CreateToggle({ Name = "Ativar Aimbot", CurrentValue = false, Callback = function(v) Config.Aimbot.Enabled = v end })
+AimbotTab:CreateDropdown({ Name = "Alvo", Options = {"Head", "HumanoidRootPart"}, CurrentOption = "Head", Callback = function(v) Config.Aimbot.TargetPart = v end })
+AimbotTab:CreateToggle({ Name = "Somente Visíveis", CurrentValue = false, Callback = function(v) Config.Aimbot.VisibleCheck = v end })
+AimbotTab:CreateSlider({ Name = "FOV", Range = {0, 500}, Increment = 1, Suffix = "px", CurrentValue = 150, Callback = function(v) Config.Aimbot.FOV = v end })
+AimbotTab:CreateSlider({ Name = "Suavização", Range = {0, 100}, Increment = 1, Suffix = "%", CurrentValue = 0, Callback = function(v) Config.Aimbot.Smoothness = v/100 end })
+AimbotTab:CreateToggle({ Name = "Ativar no Tiro (LMB)", CurrentValue = false, Callback = function(v) Config.Aimbot.UseLMB = v end })
+AimbotTab:CreateToggle({ Name = "Ativar na Mira (RMB)", CurrentValue = false, Callback = function(v) Config.Aimbot.UseRMB = v end })
+AimbotTab:CreateToggle({ Name = "Mostrar FOV", CurrentValue = false, Callback = function(v) Config.Aimbot.ShowFOV = v end })
+AimbotTab:CreateToggle({ Name = "Team Check", CurrentValue = true, Callback = function(v) Config.Aimbot.TeamCheck = v end })
+
+-- Silent Aim Tab
+SilentAimTab:CreateToggle({ Name = "Ativar Silent Aim", CurrentValue = false, Callback = function(v) Config.SilentAim.Enabled = v end })
+SilentAimTab:CreateDropdown({ Name = "Alvo", Options = {"Head", "HumanoidRootPart"}, CurrentOption = "Head", Callback = function(v) Config.SilentAim.TargetPart = v end })
+SilentAimTab:CreateToggle({ Name = "Somente Visíveis", CurrentValue = false, Callback = function(v) Config.SilentAim.VisibleCheck = v end })
+SilentAimTab:CreateSlider({ Name = "FOV", Range = {0, 1000}, Increment = 1, Suffix = "px", CurrentValue = 300, Callback = function(v) Config.SilentAim.FOV = v end })
+SilentAimTab:CreateToggle({ Name = "Mostrar FOV", CurrentValue = false, Callback = function(v) Config.SilentAim.ShowFOV = v end })
+SilentAimTab:CreateToggle({ Name = "Team Check", CurrentValue = true, Callback = function(v) Config.SilentAim.TeamCheck = v end })
+
+-- Visuals Tab
+VisualsTab:CreateToggle({ Name = "Ativar ESP", CurrentValue = false, Callback = function(v) Config.Visuals.Enabled = v end })
+VisualsTab:CreateToggle({ Name = "ESP Box", CurrentValue = false, Callback = function(v) Config.Visuals.Box = v end })
+VisualsTab:CreateToggle({ Name = "ESP Name", CurrentValue = false, Callback = function(v) Config.Visuals.Name = v end })
+VisualsTab:CreateToggle({ Name = "ESP Skeleton", CurrentValue = false, Callback = function(v) Config.Visuals.Skeleton = v end })
+VisualsTab:CreateToggle({ Name = "Team Check", CurrentValue = true, Callback = function(v) Config.Visuals.TeamCheck = v end })
+
+-- Misc Tab
+MiscTab:CreateToggle({ Name = "Agachamento Shift (HipHeight)", CurrentValue = false, Callback = function(v) 
+    Config.Misc.CustomCrouch = v 
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        Config.Misc.OriginalHipHeight = LocalPlayer.Character.Humanoid.HipHeight
+    end
+end })
+MiscTab:CreateSlider({ Name = "Profundidade", Range = {-5, 2}, Increment = 0.1, Suffix = "studs", CurrentValue = -3, Callback = function(v) Config.Misc.CrouchOffset = v end })
+
+local function Unload()
+    RenderSteppedConnection:Disconnect()
+    FOVCircle:Remove(); SilentFOVCircle:Remove()
+    for _, obj in pairs(ESP_Objects) do
+        obj.Box:Remove(); obj.Name:Remove()
+        for _, l in pairs(obj.Skeleton) do l:Remove() end
+    end
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.HipHeight = Config.Misc.OriginalHipHeight
+    end
+    Rayfield:Destroy()
+end
+SettingsTab:CreateButton({ Name = "Finalizar Script", Callback = Unload })
+
+Players.PlayerAdded:Connect(CreateESP)
+Players.PlayerRemoving:Connect(function(p)
+    if ESP_Objects[p] then
+        ESP_Objects[p].Box:Remove(); ESP_Objects[p].Name:Remove()
+        for _, l in pairs(ESP_Objects[p].Skeleton) do l:Remove() end
+        ESP_Objects[p] = nil
+    end
+end)
+for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer then CreateESP(p) end end
